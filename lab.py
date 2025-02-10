@@ -3,8 +3,8 @@ from time import sleep
 from random import randint
 
 # ! TODOS !
-# TODO: change maze to 2D array in separate file
 # TODO: check for renduntant code and organize it better
+# TODO: add option to read from file or generate random maze
 # TODO: randomize maze
 # TODO: add fog of war
 
@@ -26,7 +26,7 @@ WALL = f"{WALL_COLOR}{chr(9608)}{RESET}"
 NORTH, SOUTH, EAST, WEST = "north", "south", "east", "west"
 
 # playground settings
-DELAY = 0.1 # ~1 second / moves per second
+DELAY = 1 # ~1 second / moves per second
 WIDTH = 12
 HEIGHT = 7
 
@@ -38,15 +38,31 @@ available_directions = []
 moves = -1
 
 # playground
-MATRIX = [[WALL for _ in range(WIDTH)] for _ in range(HEIGHT)]
-MATRIX[0][0] = MATRIX[0][2] = MATRIX[0][4] = MATRIX[0][8] = MATRIX[0][9] = MATRIX[0][11] = EMPTY
-MATRIX[1][0] = MATRIX[1][2] = MATRIX[1][4] = MATRIX[1][5] = MATRIX[1][6] = MATRIX[1][8] = MATRIX[1][11] = EMPTY
-MATRIX[2][0] = MATRIX[2][1] = MATRIX[2][2] = MATRIX[2][4] = MATRIX[2][6] = MATRIX[2][7] = MATRIX[2][8] = MATRIX[2][11] = EMPTY
-MATRIX[3][1] = MATRIX[3][4] = MATRIX[3][6] = MATRIX[3][8] = MATRIX[3][11] = EMPTY
-MATRIX[4][1] = MATRIX[4][2] = MATRIX[4][3] = MATRIX[4][4] = MATRIX[4][6] = MATRIX[4][8] = MATRIX[4][9] = MATRIX[4][10] = MATRIX[4][11] = EMPTY
-MATRIX[5][3] = MATRIX[5][6] = EMPTY
-MATRIX[6][0] = MATRIX[6][1] = MATRIX[6][2] = MATRIX[6][3] = MATRIX[6][6] = MATRIX[6][7] = MATRIX[6][8] = MATRIX[6][9] = MATRIX[6][10] = MATRIX[6][11] = EMPTY
+with open("maze.txt", "r") as MAZE_FILE:
+    lines = MAZE_FILE.readlines()
+    if lines:
+        HEIGHT = len(lines)
+        WIDTH = len(lines[0].strip())
+    else:
+        print("Main: Maze file is empty")
+        exit(1)
 
+MATRIX = [[WALL for _ in range(WIDTH)] for _ in range(HEIGHT)]
+
+with open("maze.txt", "r") as MAZE_FILE:
+    for i, line in enumerate(MAZE_FILE):
+        for j, char in enumerate(line.strip()):
+            if char == "r":
+                MATRIX[i][j] = EMPTY
+            elif char == "w":
+                MATRIX[i][j] = WALL
+            elif char == "m":
+                mouse_pos = (i, j)
+                MATRIX[i][j] = MOUSE
+            elif char == "c":
+                cheese_pos = (i, j)
+                MATRIX[i][j] = CHEESE
+           
 # toys
 MATRIX[cheese_pos[0]][cheese_pos[1]] = CHEESE
 MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
