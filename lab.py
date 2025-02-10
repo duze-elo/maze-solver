@@ -3,17 +3,19 @@ from time import sleep
 from random import randint
 
 # ! TODOS !
-# TODO: randomize dungeon
+# TODO: change maze to 2D array in separate file
+# TODO: check for renduntant code and organize it better
+# TODO: randomize maze
 # TODO: add fog of war
 
-# colors
+# ANSII colors
 MOUSE_COLOR = "\033[92m"
 CHEESE_COLOR = "\033[33m"
 VISITET_COLOR = "\033[35m"
 WALL_COLOR = "\033[34m"
 RESET = "\033[0m"
 
-# objects
+# maze objects
 EMPTY = " "
 MOUSE = f"{MOUSE_COLOR}{chr(9679)}{RESET}"
 CHEESE = f"{CHEESE_COLOR}{chr(9664)}{RESET}"
@@ -24,7 +26,7 @@ WALL = f"{WALL_COLOR}{chr(9608)}{RESET}"
 NORTH, SOUTH, EAST, WEST = "north", "south", "east", "west"
 
 # playground settings
-DELAY = 0.033
+DELAY = 0.1 # ~1 second / moves per second
 WIDTH = 12
 HEIGHT = 7
 
@@ -50,6 +52,7 @@ MATRIX[cheese_pos[0]][cheese_pos[1]] = CHEESE
 MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
 
 def print_matrix(matrix):
+    system("cls")
     print(f"{WALL_COLOR}-{RESET}" * (WIDTH * 4 + 1))
     for row in matrix:
         print(f"{WALL_COLOR}| {RESET}", end="")
@@ -91,7 +94,7 @@ def debug(mouse_pos, available_directions, last_fork):
     print("moves = ", end="")
     print(moves)
 
-def check_win_condition(matrix, mouse_pos, cheese_pos, moves):
+def check_win_condition(mouse_pos, cheese_pos, moves):
     if mouse_pos == cheese_pos:
         print(f"Mouse found cheese in {moves} moves!")
         exit(0)
@@ -99,12 +102,10 @@ def check_win_condition(matrix, mouse_pos, cheese_pos, moves):
 try:
     while True:
         moves += 1
-        # sprawdzamy gdzie możemy się poruszyć
         available_directions = check_available_routes(MATRIX, mouse_pos)
-        system('cls')
         print_matrix(MATRIX)
         debug(mouse_pos, available_directions, last_fork)
-        check_win_condition(MATRIX, mouse_pos, cheese_pos, moves)
+        check_win_condition(mouse_pos, cheese_pos, moves)
 
         # jeśli jest tylko jedna droga to idziemy nią
         if len(available_directions) == 1:
