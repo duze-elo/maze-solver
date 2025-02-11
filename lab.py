@@ -3,100 +3,119 @@ from time import sleep
 from random import randint
 
 # ! TODOS !
-# TODO: check for renduntant code and organize it better
 # TODO: randomize maze
 # TODO: add option to read from file or generate random maze
 # TODO: add fog of war
+# TODO: zrobić dedykowane okienko programu
 
-# ANSII colors
-MOUSE_COLOR = "\033[92m"
-CHEESE_COLOR = "\033[33m"
-VISITET_COLOR = "\033[35m"
-WALL_COLOR = "\033[34m"
-RESET = "\033[0m"
+COLORS = {
+    "mouse": "\033[92m",
+    "cheese": "\033[33m",
+    "visited": "\033[35m",
+    "wall": "\033[34m",
+    "reset": "\033[0m"
+}
 
-# maze objects
-EMPTY = " "
-MOUSE = f"{MOUSE_COLOR}{chr(9679)}{RESET}"
-CHEESE = f"{CHEESE_COLOR}{chr(9664)}{RESET}"
-VISITET = f"{VISITET_COLOR}~{RESET}"
-WALL = f"{WALL_COLOR}{chr(9608)}{RESET}"
+OBJECTS = {
+    "empty": " ",
+    "mouse": f"{COLORS['mouse']}{chr(9679)}{COLORS['reset']}",
+    "cheese": f"{COLORS['cheese']}{chr(9664)}{COLORS['reset']}",
+    "visited": f"{COLORS['visited']}~{COLORS['reset']}",
+    "wall": f"{COLORS['wall']}{chr(9608)}{COLORS['reset']}",
+}
 
-# directions
-NORTH, SOUTH, EAST, WEST = "north", "south", "east", "west"
+def read_maze(OBJECTS) -> list:
+    with open("maze.txt", "r") as MAZE_FILE:
+        lines = MAZE_FILE.readlines()
+        if lines:
+            HEIGHT = len(lines)
+            WIDTH = len(lines[0].strip())
+        else:
+            print("Main: Maze file is empty")
+            exit(1)
 
-# playground settings
-DELAY = 1 # ~1 second / moves per second
-WIDTH = 12
-HEIGHT = 7
+    matrix = [[OBJECTS['wall'] for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
-cheese_pos = (0, 11)
-mouse_pos = (6, 0)
-last_fork = (0, 0)
-available_forks = []
-available_directions = []
-moves = -1
+    with open("maze.txt", "r") as MAZE_FILE:
+        for i, line in enumerate(MAZE_FILE):
+            for j, char in enumerate(line.strip()):
+                if char == "r":
+                    matrix[i][j] = OBJECTS['empty']
+                elif char == "w":
+                    matrix[i][j] = OBJECTS['wall']
+                elif char == "M":
+                    mouse_pos = (i, j)
+                    matrix[i][j] = OBJECTS['mouse']
+                elif char == "C":
+                    cheese_pos = (i, j)
+                    matrix[i][j] = OBJECTS['cheese']
 
-# playground
-with open("maze.txt", "r") as MAZE_FILE:
-    lines = MAZE_FILE.readlines()
-    if lines:
-        HEIGHT = len(lines)
-        WIDTH = len(lines[0].strip())
-    else:
-        print("Main: Maze file is empty")
-        exit(1)
+    return matrix, WIDTH, HEIGHT, mouse_pos, cheese_pos
 
-MATRIX = [[WALL for _ in range(WIDTH)] for _ in range(HEIGHT)]
-
-with open("maze.txt", "r") as MAZE_FILE:
-    for i, line in enumerate(MAZE_FILE):
-        for j, char in enumerate(line.strip()):
-            if char == "r":
-                MATRIX[i][j] = EMPTY
-            elif char == "w":
-                MATRIX[i][j] = WALL
-            elif char == "m":
-                mouse_pos = (i, j)
-                MATRIX[i][j] = MOUSE
-            elif char == "c":
-                cheese_pos = (i, j)
-                MATRIX[i][j] = CHEESE
-           
-# toys
-MATRIX[cheese_pos[0]][cheese_pos[1]] = CHEESE
-MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-
-def print_matrix(matrix):
+def print_matrix(matrix, WIDTH, ) -> None:
     system("cls")
-    print(f"{WALL_COLOR}-{RESET}" * (WIDTH * 4 + 1))
+    print(f"{COLORS['wall']}-{COLORS['reset']}" * (WIDTH * 4 + 1))
     for row in matrix:
-        print(f"{WALL_COLOR}| {RESET}", end="")
-        print(f"{WALL_COLOR} | {RESET}".join(row) + "", end="")
-        print(f"{WALL_COLOR} |{RESET}")
-        print(f"{WALL_COLOR}-{RESET}" * (WIDTH * 4 + 1))
+        print(f"{COLORS['wall']}| {COLORS['reset']}", end="")
+        print(f"{COLORS['wall']} | {COLORS['reset']}".join(row) + "", end="")
+        print(f"{COLORS['wall']} |{COLORS['reset']}")
+        print(f"{COLORS['wall']}-{COLORS['reset']}" * (WIDTH * 4 + 1))
 
-def check_available_routes(matrix, mouse_pos) -> list:
+def check_available_routes(matrix, mouse_pos, WIDTH, HEIGHT, OBJECTS) -> list:
     available_directions = []
     try:
-        if(mouse_pos[1] != 11):
-            if(MATRIX[mouse_pos[0]][mouse_pos[1] + 1] == EMPTY or MATRIX[mouse_pos[0]][mouse_pos[1] + 1] == CHEESE):
-                available_directions.append(EAST)
-        if(mouse_pos[1] != 0):
-            if(MATRIX[mouse_pos[0]][mouse_pos[1] - 1] == EMPTY or MATRIX[mouse_pos[0]][mouse_pos[1] - 1] == CHEESE):
-                available_directions.append(WEST)
-        if(mouse_pos[0] != 6):
-            if(MATRIX[mouse_pos[0] + 1][mouse_pos[1]] == EMPTY or MATRIX[mouse_pos[0] + 1][mouse_pos[1]] == CHEESE):
-                available_directions.append(SOUTH)
-        if(mouse_pos[0] != 0):
-            if(MATRIX[mouse_pos[0] - 1][mouse_pos[1]] == EMPTY or MATRIX[mouse_pos[0] - 1][mouse_pos[1]] == CHEESE):
-                available_directions.append(NORTH)
+        if(mouse_pos[1] < WIDTH - 1):
+            checked_space = matrix[mouse_pos[0]][mouse_pos[1] + 1]
+            if(checked_space == OBJECTS['empty'] or checked_space == OBJECTS['cheese']):
+                available_directions.append('e')
+
+        if(mouse_pos[1] > 0):
+            checked_space = matrix[mouse_pos[0]][mouse_pos[1] - 1]
+            if(checked_space == OBJECTS['empty'] or checked_space == OBJECTS['cheese']):
+                available_directions.append('w')
+
+        if(mouse_pos[0] < HEIGHT - 1):
+            checked_space = matrix[mouse_pos[0] + 1][mouse_pos[1]]
+            if(checked_space == OBJECTS['empty'] or checked_space == OBJECTS['cheese']):
+                available_directions.append('s')
+
+        if(mouse_pos[0] > 0):
+            checked_space = matrix[mouse_pos[0] - 1][mouse_pos[1]]
+            if(checked_space == OBJECTS['empty'] or checked_space == OBJECTS['cheese']):
+                available_directions.append('n')
     except IndexError:
         print("check_available_routes: IndexError")
         pass
     return available_directions
 
-def debug(mouse_pos, available_directions, last_fork):
+def move_mouse(matrix, direction, mouse_pos):
+    new_mouse_pos = mouse_pos
+    if direction == 'n':
+        new_mouse_pos = (mouse_pos[0] - 1, mouse_pos[1])
+        if new_mouse_pos[0] >= 0:
+            matrix[new_mouse_pos[0]][new_mouse_pos[1]] = OBJECTS['mouse']
+            matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['visited']
+    elif direction == 's':
+        new_mouse_pos = (mouse_pos[0] + 1, mouse_pos[1])
+        if new_mouse_pos[0] < len(matrix):
+            matrix[new_mouse_pos[0]][new_mouse_pos[1]] = OBJECTS['mouse']
+            matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['visited']
+    elif direction == 'e':
+        new_mouse_pos = (mouse_pos[0], mouse_pos[1] + 1)
+        if new_mouse_pos[1] < len(matrix[0]):
+            matrix[new_mouse_pos[0]][new_mouse_pos[1]] = OBJECTS['mouse']
+            matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['visited']
+    elif direction == 'w':
+        new_mouse_pos = (mouse_pos[0], mouse_pos[1] - 1)
+        if new_mouse_pos[1] >= 0:
+            matrix[new_mouse_pos[0]][new_mouse_pos[1]] = OBJECTS['mouse']
+            matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['visited']
+    else:
+        print("move_mouse: ERROR")
+        new_mouse_pos = mouse_pos
+    return new_mouse_pos
+
+def debug(mouse_pos, available_directions, last_fork, cheese_pos, available_forks, moves):
     print("mouse_pos = ", end="")
     print(mouse_pos)
     print("available_directions = ", end="")
@@ -115,69 +134,51 @@ def check_win_condition(mouse_pos, cheese_pos, moves):
         print(f"Mouse found cheese in {moves} moves!")
         exit(0)
 
-try:
-    while True:
-        moves += 1
-        available_directions = check_available_routes(MATRIX, mouse_pos)
-        print_matrix(MATRIX)
-        debug(mouse_pos, available_directions, last_fork)
-        check_win_condition(mouse_pos, cheese_pos, moves)
+def main(OBJECTS) -> None:
+    try:
+        DELAY = 0.3 # ~1 second / moves per second
 
-        # jeśli jest tylko jedna droga to idziemy nią
-        if len(available_directions) == 1:
-            if available_directions[0] == NORTH:
-                mouse_pos = (mouse_pos[0] - 1, mouse_pos[1])
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0] + 1][mouse_pos[1]] = VISITET
-            elif available_directions[0] == SOUTH:
-                mouse_pos = (mouse_pos[0] + 1, mouse_pos[1])
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0] - 1][mouse_pos[1]] = VISITET
-            elif available_directions[0] == EAST:
-                mouse_pos = (mouse_pos[0], mouse_pos[1] + 1)
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0]][mouse_pos[1] - 1] = VISITET
-            elif available_directions[0] == WEST:
-                mouse_pos = (mouse_pos[0], mouse_pos[1] - 1)
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0]][mouse_pos[1] + 1] = VISITET
-            else:
-                print("Main: droga == 1: ERROR")
+        cheese_pos = (0, 0)
+        mouse_pos = (0, 0)
+        last_fork = (0, 0)
+        available_forks = []
+        available_directions = []
+        moves = -1
 
-        # jeśli jest więcej niż jedna droga to zapisujemy ostatni rozdział
-        elif len(available_directions) > 1:
-            last_fork = mouse_pos
-            available_forks.append(last_fork)
-            direction = available_directions[randint(0, len(available_directions) - 1)]
+        matrix, WIDTH, HEIGHT, mouse_pos, cheese_pos = read_maze(OBJECTS)
 
-            if direction == NORTH:
-                mouse_pos = (mouse_pos[0] - 1, mouse_pos[1])
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0] + 1][mouse_pos[1]] = VISITET
-            elif direction == SOUTH:
-                mouse_pos = (mouse_pos[0] + 1, mouse_pos[1])
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0] - 1][mouse_pos[1]] = VISITET
-            elif direction == EAST:
-                mouse_pos = (mouse_pos[0], mouse_pos[1] + 1)
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0]][mouse_pos[1] - 1] = VISITET
-            elif direction == WEST:
-                mouse_pos = (mouse_pos[0], mouse_pos[1] - 1)
-                MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
-                MATRIX[mouse_pos[0]][mouse_pos[1] + 1] = VISITET
-            else:
-                print("Main: droga > 1: ERROR")
-        
-        # jeśli nie ma dróg to wracamy do ostatniego rozdziału z wolnymi drogami
-        else: # len(available_directions) == 0
-            MATRIX[mouse_pos[0]][mouse_pos[1]] = VISITET
-            mouse_pos = available_forks[len(available_forks) - 1]
-            available_forks.pop()
-            MATRIX[mouse_pos[0]][mouse_pos[1]] = MOUSE
+        while True:
+            moves += 1
+            available_directions = check_available_routes(matrix, mouse_pos, WIDTH, HEIGHT, OBJECTS)
+            print_matrix(matrix, WIDTH)
+            debug(mouse_pos, available_directions, last_fork, cheese_pos, available_forks, moves)
+            check_win_condition(mouse_pos, cheese_pos, moves)
 
-        sleep(DELAY)
+            if len(available_directions) == 1:
+                direction = available_directions[0]
+                mouse_pos = move_mouse(matrix, direction, mouse_pos)
 
-except KeyboardInterrupt:
-    print("Main: KeyboardInterrupt")
-    pass
+            elif len(available_directions) > 1:
+                last_fork = mouse_pos
+                available_forks.append(last_fork)
+                direction = available_directions[randint(0, len(available_directions) - 1)]
+                mouse_pos = move_mouse(matrix, direction, mouse_pos)
+
+            else: # len(available_directions) == 0
+                matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['visited']
+                if available_forks:
+                    mouse_pos = available_forks[len(available_forks) - 1]
+                    available_forks.pop()
+                    matrix[mouse_pos[0]][mouse_pos[1]] = OBJECTS['mouse']
+                else:
+                    print("No available forks to backtrack to.")
+                    break
+
+            sleep(DELAY)
+
+    except KeyboardInterrupt:
+        print("Main: KeyboardInterrupt")
+        pass
+
+if __name__ == "__main__":
+    main(OBJECTS)
