@@ -4,8 +4,8 @@ from random import randint
 
 # ! TODOS !
 # TODO: check for renduntant code and organize it better
-# TODO: add option to read from file or generate random maze
 # TODO: randomize maze
+# TODO: add option to read from file or generate random maze
 # TODO: add fog of war
 
 # ANSII colors
