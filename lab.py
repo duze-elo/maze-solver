@@ -76,11 +76,11 @@ def draw_maze(screen, matrix, WIDTH, HEIGHT, OBJECTS, cell_size, mouse_pos, avai
             if cell == OBJECTS['wall']:
                 color = (0, 0, 255)
             elif cell == OBJECTS['mouse']:
-                color = (88, 57, 39)
+                color = (0, 255, 0)
             elif cell == OBJECTS['cheese']:
                 color = (255, 255, 0)
             elif cell == OBJECTS['visited']:
-                color = (0, 100, 0)
+                color = (255, 0, 0)
 
             pygame.draw.rect(screen, color, pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size))
     
@@ -153,20 +153,6 @@ def move_mouse(matrix, direction, mouse_pos):
         new_mouse_pos = mouse_pos
     return new_mouse_pos
 
-def debug_print(mouse_pos, available_directions, last_fork, cheese_pos, available_forks, moves):
-    print("mouse_pos = ", end="")
-    print(mouse_pos)
-    print("available_directions = ", end="")
-    print(available_directions)
-    print("last_fork = ", end="")
-    print(last_fork)
-    print("cheese_pos = ", end="")
-    print(cheese_pos)
-    print("available_forks = ", end="")
-    print(available_forks)
-    print("moves = ", end="")
-    print(moves)
-
 def debug_get(mouse_pos, available_directions, last_fork, cheese_pos, available_forks, moves):
     return (f"mouse_pos = {mouse_pos}\n"
            f"available_directions = {available_directions}\n"
@@ -176,10 +162,9 @@ def debug_get(mouse_pos, available_directions, last_fork, cheese_pos, available_
            f"moves = {moves}\n"
     )
 
-def check_win_condition(mouse_pos, cheese_pos, moves) -> bool:
+def check_win_condition(mouse_pos, cheese_pos) -> bool:
     if mouse_pos == cheese_pos:
-        print(f"Mouse found cheese in {moves} moves!")
-        return True  # Keep the game loop running
+        return True
     return False
 
 def main(OBJECTS) -> None:
@@ -212,7 +197,7 @@ def main(OBJECTS) -> None:
             moves += 1
             available_directions = check_available_routes(matrix, mouse_pos, WIDTH, HEIGHT, OBJECTS)
             draw_maze(screen, matrix, WIDTH, HEIGHT, OBJECTS, cell_size, mouse_pos, available_directions, last_fork, cheese_pos, available_forks, moves)
-            game_loop = not check_win_condition(mouse_pos, cheese_pos, moves)
+            game_loop = not check_win_condition(mouse_pos, cheese_pos)
 
             if game_loop:
                 if len(available_directions) == 1:
