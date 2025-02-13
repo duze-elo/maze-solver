@@ -76,11 +76,11 @@ def draw_maze(screen, matrix, WIDTH, HEIGHT, OBJECTS, cell_size, mouse_pos, avai
             if cell == OBJECTS['wall']:
                 color = (0, 0, 255)
             elif cell == OBJECTS['mouse']:
-                color = (0, 255, 0)
+                color = (88, 57, 39)
             elif cell == OBJECTS['cheese']:
                 color = (255, 255, 0)
             elif cell == OBJECTS['visited']:
-                color = (255, 0, 255)
+                color = (0, 100, 0)
 
             pygame.draw.rect(screen, color, pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size))
     
